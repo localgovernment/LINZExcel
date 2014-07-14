@@ -24,7 +24,6 @@ As an example populate the following cells in the worksheet as follows:
 * C1: Encumbrancees
 * D1: Instrument Numbers
 * E1: Instrument Types
-
 * B2: =GetTitles(A2)
 * C2: =GetEncumbrancees(B2)
 * D2: =GetInstrumentNumbers(B2)
