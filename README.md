@@ -24,21 +24,23 @@ As an example populate the following cells in the worksheet as follows:
 * C1: Encumbrancees
 * D1: Instrument Numbers
 * E1: Instrument Types
+
 * B2: =GetTitles(A2)
 * C2: =GetEncumbrancees(B2)
 * D2: =GetInstrumentNumbers(B2)
 * E2: =GetInstrumentTypes(B2)
 
-* Enter a valid Parcel ID into A2, the rest of the cells in row 2 should populate automatically 
-* To save: File 'Save As' then Save as Type 'Excel Macro-enabled Workbook' (xlsm)
+Enter a valid Parcel ID into A2, the rest of the cells in row 2 should populate automatically.
+
+To save: File 'Save As' then Save as Type 'Excel Macro-enabled Workbook' (xlsm)
 
 Notes
 =====
 * GetTitles(parcelID) - returns a list of (current) LINZ titles for the given ParcelID
 * GetEncumbrancees(title) - returns a list of (current) LINZ encumbrancees for the given title
 * GetInstrumentNumbers(title) - returns a list of (current) LINZ Instrument numbers for the given title
-* GetInstrumentTypes(title) - returns a list of (current) LINZ instrument types for the given title – should be same order * as instrument numbers
+* GetInstrumentTypes(title) - returns a list of (current) LINZ instrument types for the given title – should be same order as instrument numbers
 * GetMainParcelID(valuation) - Taupo District Council Mapi API - returns the main parcel ID for the given valuation number
 
-* GetEncumbrancees, GetInstrumentNumbers, and GetIntrumentTypes will take the first title in the list (if a list of titles  is provided)
+GetEncumbrancees, GetInstrumentNumbers, and GetIntrumentTypes will take the first title in the list (if a list of titles  is provided)
  
