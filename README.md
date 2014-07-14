@@ -4,10 +4,10 @@ A collection of Excel VBA functions that access the LINZ data.linz.govt.nz WFS A
 
 Setup 
 =====
-1. Register with LINZ
-2. Obtain an API key
-3. Apply for restricted datasets
-4. Download LINZExcel.bas
+1. Register with LINZ https://data.linz.govt.nz/
+2. Obtain an API key http://www.linz.govt.nz/about-linz/linz-data-service/features/how-to-use-web-services
+3. Apply for restricted datasets https://data.linz.govt.nz/group/restricted-owner-data-group/
+4. Download LINZExcel.bas from https://raw.githubusercontent.com/localgovernment/LINZExcel/master/LINZExcel.bas
 5. Create a new Excel spreadsheet 
 6. Press ALT+F11
 7. Press CTRL+M and import the LINZExcel.bas file
