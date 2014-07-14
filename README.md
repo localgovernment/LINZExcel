@@ -29,7 +29,7 @@ As an example populate the following cells in the worksheet as follows:
 * D2: =GetInstrumentNumbers(B2)
 * E2: =GetInstrumentTypes(B2)
 
-Enter a valid Parcel ID into A2, the rest of the cells in row 2 should populate automatically.
+Enter a valid Parcel ID into A2 and the rest of the cells in row 2 should populate automatically.
 
 To save: File 'Save As' then Save as Type 'Excel Macro-enabled Workbook' (xlsm)
 
