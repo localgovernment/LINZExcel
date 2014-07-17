@@ -40,6 +40,8 @@ Notes
 * GetInstrumentNumbers(title) - returns a list of (current) LINZ Instrument numbers for the given title
 * GetInstrumentTypes(title) - returns a list of (current) LINZ instrument types for the given title – should be same order as instrument numbers
 * GetMainParcelID(valuation) - Taupo District Council Mapi API - returns the main parcel ID for the given valuation number
+* GetSurnames - returns a list of LINZ surnames for the given title
+* ProcessValuations - Process all selected valuations - TDC specific but can be modified.  Assign to a button.
 
 GetEncumbrancees, GetInstrumentNumbers, and GetIntrumentTypes will take the first title in the list (if a list of titles  is provided)
  
