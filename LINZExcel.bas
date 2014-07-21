@@ -26,7 +26,11 @@ Public Function ExtractJSONValue(json As String, key As String) As String
     start = start + Len(key) + 3
     Dim finish As Integer: finish = InStr(start, json, Chr(34))
     Dim length As Integer: length = finish - start
-    ExtractJSONValue = Mid(json, start, length)
+    If (length >= 1) Then
+        ExtractJSONValue = Mid(json, start, length)
+    Else
+        ExtractJSONValue = ""
+    End If
 End Function
 Public Function GetTitles(parcelID As String) As String
     ' Returns a list of (current) LINZ titles for the given ParcelID
