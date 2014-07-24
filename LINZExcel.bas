@@ -52,6 +52,46 @@ Public Function GetSurnames(title As String) As String
     ' Returns a list of LINZ surnames for the given title
     GetSurnames = LINZ("table-1564", "title_no=%27" + FirstInList(title) + "%27", "prime_surname")
 End Function
+Public Function ExtractMortgages(encumbrancees As String, instrument_types As String)
+    ' Extract list of mortages from list of encumbrancees using instrument types as a reference
+    ' Items from both lists to be in matched order
+    ' Non mortgage or encumbrancee instrument types items removed from instrument types list
+    
+    Dim e_list() As String, i_list() As String
+    Dim res As String
+    Dim c As Integer
+    
+    If encumbrancees = "" Then
+         ExtractMortgages = ""
+    Else
+         ' trim encumbrancees after splitting out of list
+         e_list = Split(encumbrancees, ";")
+         For i = 0 To UBound(e_list)
+             e_list(i) = Trim(e_list(i))
+         Next i
+         
+         ' Encumbrancee or mortgage instrument types only
+         i_list = Split(instrument_types, ",")
+         ReDim in_list(UBound(e_list)) As String
+         For i = 0 To UBound(i_list)
+             If Trim(i_list(i)) = "Mortgage" Or Trim(i_list(i)) = "Encumbrance" Then
+                 in_list(c) = Trim(i_list(i))
+                 c = c + 1
+             End If
+         Next i
+        
+         ' Extract out mortgage values
+         For i = 0 To UBound(e_list)
+             If in_list(i) = "Mortgage" Then
+                 If Len(res) <> 0 Then
+                     res = res + "; "
+                 End If
+                 res = res + e_list(i)
+             End If
+         Next i
+         ExtractMortgages = res
+    End If
+End Function
 Public Function FirstInList(aList As String) As String
     Dim comma As Integer: comma = InStr(aList, ",")
     If comma = 0 Then
@@ -71,6 +111,7 @@ Public Sub ProcessValuations()
     Dim titles() As String
     Dim ttle As String
     Dim currow As Integer
+    Dim xe As String, xit As String
     
     Set rng = Selection
     Set sourceSheet = ActiveSheet
@@ -84,8 +125,9 @@ Public Sub ProcessValuations()
     destSheet.Range("C1").Value = "LINZ Title"
     destSheet.Range("D1").Value = "LINZ Surnames"
     destSheet.Range("E1").Value = "Encumbrancee"
-    destSheet.Range("F1").Value = "Instrument Numbers"
-    destSheet.Range("G1").Value = "Instrument Types"
+    destSheet.Range("F1").Value = "Mortgages"
+    destSheet.Range("G1").Value = "Instrument Numbers"
+    destSheet.Range("H1").Value = "Instrument Types"
     
     ' get data from Mapi and LINZ
     For Each cell In rng
@@ -97,13 +139,18 @@ Public Sub ProcessValuations()
         For Each title In titles
             ttle = Trim(CStr(title))
             currow = currow + 1
+            
+            xe = GetEncumbrancees(ttle)
+            xit = GetInstrumentTypes(ttle)
+            
             destSheet.Range("A1").Offset(currow, 0).Value = cell.Value
             destSheet.Range("B1").Offset(currow, 0).Value = parcelID
             destSheet.Range("C1").Offset(currow, 0).Value = ttle
             destSheet.Range("D1").Offset(currow, 0).Value = GetSurnames(ttle)
-            destSheet.Range("E1").Offset(currow, 0).Value = GetEncumbrancees(ttle)
-            destSheet.Range("F1").Offset(currow, 0).Value = GetInstrumentNumbers(ttle)
-            destSheet.Range("G1").Offset(currow, 0).Value = GetInstrumentTypes(ttle)
+            destSheet.Range("E1").Offset(currow, 0).Value = xe
+            destSheet.Range("F1").Offset(currow, 0).Value = ExtractMortgages(xe, xit)
+            destSheet.Range("G1").Offset(currow, 0).Value = GetInstrumentNumbers(ttle)
+            destSheet.Range("H1").Offset(currow, 0).Value = xit
         Next title
     Next cell
 
@@ -136,7 +183,7 @@ Public Function LINZ(typeName As String, filter As String, element As String) As
     'gather and return element text(s)
     Set elements = xmlDoc.getElementsByTagName("data.linz.govt.nz:" + element)
     For Each el In elements
-        results = results + IIf(results = "", "", ", ")
+        results = results + IIf(results = "", "", IIf(element = "encumbrancees", ";", ",") + " ")
         results = results + el.Text
     Next
     
