@@ -21,7 +21,7 @@ As an example populate the following cells in the worksheet as follows:
 
 * A1: Parcel ID
 * B1: Title(s)
-* C1: Encumbrancees
+* C1: Mortgages
 * D1: Instrument Numbers
 * E1: Instrument Types
 * B2: =GetTitles(A2)
