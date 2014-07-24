@@ -37,7 +37,7 @@ Public Function GetTitles(parcelID As String) As String
     GetTitles = LINZ("layer-772", "id=" + parcelID, "titles")
 End Function
 Public Function GetMortgages(title As String) As String
-    ' Returns a list of (current) LINZ encumbrancees for the given title
+    ' Returns a list of current Mortgages for the given title
     GetMortgages = LINZ("table-1695", "title_no=%27" + FirstInList(title) + "%27%20AND%20current=%27true%27%20AND%20instrument_type=%27Mortgage%27", "encumbrancees")
 End Function
 Public Function GetInstrumentNumbers(title As String) As String
