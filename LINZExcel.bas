@@ -9,15 +9,22 @@
 ' ******* Replace the following with your LINZ API Key *********
 Public Const key As String = "my LINZ API key"
 ' **************************************************************
-
-Public Function GetMainParcelID(valuation As String) As String
-    ' Taupo District Council Mapi API - returns the main parcel ID for the given valuation number
-    Dim query As String: query = "http://gis.taupodc.govt.nz/arcgis/rest/services/Mapi/TaupoProperty/MapServer/0/query?where=valuation_id+%3D+%27" + valuation + "%27&outFields=valuation_id%2C+m_parcel_id&returnGeometry=false&f=json"
+Public Function GetMapiField(valuation As String, aField As String) As String
+  ' Taupo District Council Mapi API - returns the Mapi field value for the given valuation
+    Dim query As String: query = "http://gis.taupodc.govt.nz/arcgis/rest/services/Mapi/TaupoProperty/MapServer/0/query?where=valuation_id+%3D+%27" + valuation + "%27&outFields=" + aField + "%2C+m_parcel_id&returnGeometry=false&f=json"
     Dim http As Object: Set http = CreateObject("MSXML2.XMLHTTP")
     Dim xmlDoc As Object: Set xmlDoc = CreateObject("MSXML2.DOMDocument")
     http.Open "GET", query, False
     http.send
-    GetMainParcelID = ExtractJSONValue(http.responseText, "m_parcel_id")
+    GetMapiField = ExtractJSONValue(http.responseText, aField)
+End Function
+Public Function GetMainParcelID(valuation As String) As String
+    ' Taupo District Council Mapi API - returns the main parcel ID for the given valuation number
+    GetMainParcelID = GetMapiField(valuation, "m_parcel_id")
+End Function
+Public Function GetMapiTitle(valuation As String) As String
+    ' Taupo District Council Mapi API - returns the main parcel ID for the given valuation number
+    GetMapiTitle = GetMapiField(valuation, "certificate_of_title")
 End Function
 Public Function ExtractJSONValue(json As String, key As String) As String
     Dim start As Integer: start = InStr(json, key)
@@ -32,12 +39,18 @@ Public Function ExtractJSONValue(json As String, key As String) As String
         ExtractJSONValue = ""
     End If
 End Function
+Public Function ValidLiveTitle(title As String) As String
+    ' Returns true / false that title is current and valid
+    Dim ttle As String
+    ttle = LINZ("table-1567", "title_no=%27" + title + "%27%20AND%20status=%27Live%27", "title_no")
+    ValidLiveTitle = (title = ttle)
+End Function
 Public Function GetTitles(parcelID As String) As String
     ' Returns a list of (current) LINZ titles for the given ParcelID
     GetTitles = LINZ("layer-772", "id=" + parcelID, "titles")
 End Function
 Public Function GetMortgages(title As String) As String
-    ' Returns a list of current Mortgages for the given title
+    ' Returns a list of (current) LINZ encumbrancees for the given title
     GetMortgages = LINZ("table-1695", "title_no=%27" + FirstInList(title) + "%27%20AND%20current=%27true%27%20AND%20instrument_type=%27Mortgage%27", "encumbrancees")
 End Function
 Public Function GetInstrumentNumbers(title As String) As String
@@ -63,14 +76,12 @@ Public Function FirstInList(aList As String) As String
 End Function
 Public Sub ProcessValuations()
     ' Process all selected valuations - TDC specific but can be modified
-    ' TODO: requires serious refactoring
     
     Dim sourceSheet As Worksheet
     Dim destinationSheet As Worksheet
     Dim rng As Range
-    Dim parcelID As String
-    Dim titles() As String
-    Dim ttle As String
+    Dim mapiTitle As String
+    Dim linzTitle As String
     Dim currow As Integer
     
     Set rng = Selection
@@ -81,7 +92,7 @@ Public Sub ProcessValuations()
     destSheet.Columns("A:G").NumberFormat = "@"
     
     destSheet.Range("A1").Value = "Valuation No."
-    destSheet.Range("B1").Value = "Main Parcel ID"
+    destSheet.Range("B1").Value = "NCS Title"
     destSheet.Range("C1").Value = "LINZ Title"
     destSheet.Range("D1").Value = "LINZ Surnames"
     destSheet.Range("E1").Value = "Mortgages"
@@ -93,21 +104,31 @@ Public Sub ProcessValuations()
         If IsEmpty(cell.Value) Then
             Exit For
         End If
-        parcelID = GetMainParcelID(cell.Value)
-        titles = Split(GetTitles(parcelID), ",")
-        For Each title In titles
-            ttle = Trim(CStr(title))
-            currow = currow + 1
-            destSheet.Range("A1").Offset(currow, 0).Value = cell.Value
-            destSheet.Range("B1").Offset(currow, 0).Value = parcelID
-            destSheet.Range("C1").Offset(currow, 0).Value = ttle
-            destSheet.Range("D1").Offset(currow, 0).Value = GetSurnames(ttle)
-            destSheet.Range("E1").Offset(currow, 0).Value = GetMortgages(ttle)
-            destSheet.Range("F1").Offset(currow, 0).Value = GetInstrumentNumbers(ttle)
-            destSheet.Range("G1").Offset(currow, 0).Value = GetInstrumentTypes(ttle)
-        Next title
-    Next cell
+        
+        currow = currow + 1
+        
+        mapiTitle = GetMapiTitle(cell.Value)
+        
+        destSheet.Range("A1").Offset(currow, 0).Value = cell.Value
+        destSheet.Range("B1").Offset(currow, 0).Value = mapiTitle
+        
+        linzTitle = ""
+        If ValidLiveTitle(Trim(UCase(mapiTitle))) Then
+            linzTitle = Trim(UCase(mapiTitle))
+        Else
+            If ValidLiveTitle("SA" + Trim(UCase(mapiTitle))) Then
+                linzTitle = "SA" + Trim(UCase(mapiTitle))
+            End If
+        End If
 
+        If linzTitle <> "" Then
+            destSheet.Range("C1").Offset(currow, 0).Value = linzTitle
+            destSheet.Range("D1").Offset(currow, 0).Value = GetSurnames(linzTitle)
+            destSheet.Range("E1").Offset(currow, 0).Value = GetMortgages(linzTitle)
+            destSheet.Range("F1").Offset(currow, 0).Value = GetInstrumentNumbers(linzTitle)
+            destSheet.Range("G1").Offset(currow, 0).Value = GetInstrumentTypes(linzTitle)
+        End If
+    Next cell
 End Sub
 Public Function LINZ(typeName As String, filter As String, element As String) As String
     ' using the following as reference
