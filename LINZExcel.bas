@@ -80,7 +80,6 @@ Public Sub ProcessValuations()
     Dim sourceSheet As Worksheet
     Dim destinationSheet As Worksheet
     Dim rng As Range
-    Dim mapiTitle As String
     Dim linzTitle As String
     Dim currow As Integer
     
@@ -107,21 +106,12 @@ Public Sub ProcessValuations()
         
         currow = currow + 1
         
-        mapiTitle = GetMapiTitle(cell.Value)
+        linzTitle = Trim(UCase(GetMapiTitle(cell.Value)))
         
         destSheet.Range("A1").Offset(currow, 0).Value = cell.Value
-        destSheet.Range("B1").Offset(currow, 0).Value = mapiTitle
-        
-        linzTitle = ""
-        If ValidLiveTitle(Trim(UCase(mapiTitle))) Then
-            linzTitle = Trim(UCase(mapiTitle))
-        Else
-            If ValidLiveTitle("SA" + Trim(UCase(mapiTitle))) Then
-                linzTitle = "SA" + Trim(UCase(mapiTitle))
-            End If
-        End If
+        destSheet.Range("B1").Offset(currow, 0).Value = linzTitle
 
-        If linzTitle <> "" Then
+        If ValidLiveTitle(linzTitle) Then
             destSheet.Range("C1").Offset(currow, 0).Value = linzTitle
             destSheet.Range("D1").Offset(currow, 0).Value = GetSurnames(linzTitle)
             destSheet.Range("E1").Offset(currow, 0).Value = GetMortgages(linzTitle)
