@@ -25,7 +25,7 @@ As an example populate the following cells in the worksheet as follows:
 * D1: Instrument Numbers
 * E1: Instrument Types
 * B2: =GetTitles(A2)
-* C2: =GetMorgages(B2)
+* C2: =GetMortgages(B2)
 * D2: =GetInstrumentNumbers(B2)
 * E2: =GetInstrumentTypes(B2)
 
