@@ -14,34 +14,12 @@ Setup
 8. Open the LINZExcel module
 9. Near the top of the code, find 'Public Const key as String = "my LINZ API key"' and replace key string with your LINZ api key
 10. Close VBA for applications 
+11. Creat a button in a worksheet and assign it to the GetTitleInformation macro.  See [here](http://office.microsoft.com/en-nz/excel-help/add-a-button-and-assign-a-macro-to-it-in-a-worksheet-HP010236676.aspx#BMadd_or_edit_a_button_(forms_toolbar))
 
-Example
-=======
-As an example populate the following cells in the worksheet as follows:
-
-* A1: Parcel ID
-* B1: Title(s)
-* C1: Mortgages
-* D1: Instrument Numbers
-* E1: Instrument Types
-* B2: =GetTitles(A2)
-* C2: =GetMortgages(B2)
-* D2: =GetInstrumentNumbers(B2)
-* E2: =GetInstrumentTypes(B2)
-
-Enter a valid Parcel ID into A2 and the rest of the cells in row 2 should populate automatically.
-
-To save: File 'Save As' then Save as Type 'Excel Macro-enabled Workbook' (xlsm)
-
-Notes
-=====
-* GetTitles(parcelID) - returns a list of (current) LINZ titles for the given ParcelID
-* GetMortgages(title) - returns a list of current mortgages for the given title
-* GetInstrumentNumbers(title) - returns a list of (current) LINZ Instrument numbers for the given title
-* GetInstrumentTypes(title) - returns a list of (current) LINZ instrument types for the given title – should be same order as instrument numbers
-* GetMainParcelID(valuation) - Taupo District Council Mapi API - returns the main parcel ID for the given valuation number
-* GetSurnames - returns a list of LINZ surnames for the given title
-* ProcessValuations - Process all selected valuations - TDC specific but can be modified.  Assign to a button.
-
-GetMortgages, GetInstrumentNumbers, and GetIntrumentTypes will take the first title in the list (if a list of titles  is provided)
- 
+Using LINZExcel
+===============
+1. Enter a list of titles into a column within the same worksheet with the button created above
+2. Select the titles you want to process
+3. Click the button
+4. After a few seconds the following worksheets will be created and populated with data: PropertyTitlesList, PropertyTitleEstatesList, PropertyTitleOwnersList, PropertyTitleOwnersList, TitleMemorialsList, TitleParcelAssociationList
+5. The data received from LINZ is not ordered.  You'll need to use the Filter/Sort features of Excel to make sense of the results.
