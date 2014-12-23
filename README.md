@@ -14,7 +14,7 @@ Setup
 
 Using LINZExcel
 ===============
-1. Enter a list of titles into a column within the same worksheet as the button created during setup
+1. Enter valid titles into a column within the same worksheet as the button created during setup
 2. Select the titles you want to process
 3. Click the button
 4. After a few seconds the following worksheets will be created and populated with data: PropertyTitlesList, PropertyTitleEstatesList, PropertyTitleOwnersList, PropertyTitleOwnersList, TitleMemorialsList, TitleParcelAssociationList
