@@ -1,7 +1,3 @@
-LINZExcel
-=========
-A collection of Excel VBA functions that access the LINZ data.linz.govt.nz WFS API
-
 Setup 
 =====
 1. Register with LINZ https://data.linz.govt.nz/
