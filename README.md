@@ -14,7 +14,7 @@ Setup
 8. Open the LINZExcel module
 9. Near the top of the code, find 'Public Const key as String = "my LINZ API key"' and replace key string with your LINZ api key
 10. Close VBA for applications 
-11. Creat a button in a worksheet and assign it to the GetTitleInformation macro.  See [here](http://office.microsoft.com/en-nz/excel-help/add-a-button-and-assign-a-macro-to-it-in-a-worksheet-HP010236676.aspx#BMadd_or_edit_a_button_(forms_toolbar))
+11. Creat a button in a worksheet and assign it to the GetTitleInformation macro.  See [here](http://office.microsoft.com/en-nz/excel-help/add-a-button-and-assign-a-macro-to-it-in-a-worksheet-HP010236676.aspx#BMadd_or_edit_a_button_(forms_toolbar)).
 
 Using LINZExcel
 ===============
