@@ -7,7 +7,7 @@
 ' ************************************************************************************************
 
 ' ******* Replace the following with your LINZ API Key *********
-Public Const key As String = "LINZ API KEY"
+Public Const key As String = "my LINZ API KEY"
 Public Sub GetTitleInformation()
     ' Generate all sheets for selected titles
     Dim selected As Range
