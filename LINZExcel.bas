@@ -1,5 +1,5 @@
 ' ************************************************************************************************
-' * LINZExcel : A collection of Excel VBA functions that access the LINZ data.linz.govt.nz WFS API
+' * LINZExcel : Extract title information and related records from LINZ
 ' *
 ' * The MIT License (MIT)
 ' *
@@ -7,151 +7,166 @@
 ' ************************************************************************************************
 
 ' ******* Replace the following with your LINZ API Key *********
-Public Const key As String = "my LINZ API key"
-' **************************************************************
-Public Function GetMapiField(valuation As String, aField As String) As String
-  ' Taupo District Council Mapi API - returns the Mapi field value for the given valuation
-    Dim query As String: query = "http://gis.taupodc.govt.nz/arcgis/rest/services/Mapi/TaupoProperty/MapServer/0/query?where=valuation_id+%3D+%27" + valuation + "%27&outFields=" + aField + "%2C+m_parcel_id&returnGeometry=false&f=json"
-    Dim http As Object: Set http = CreateObject("MSXML2.XMLHTTP")
-    Dim xmlDoc As Object: Set xmlDoc = CreateObject("MSXML2.DOMDocument")
-    http.Open "GET", query, False
-    http.send
-    GetMapiField = ExtractJSONValue(http.responseText, aField)
+Public Const key As String = "LINZ API KEY"
+Public Sub GetTitleInformation()
+    ' Generate all sheets for selected titles
+    Dim selected As Range
+    Set selected = Selection
+    
+    GetPropertyTitlesList selected
+    GetPropertyTitleEstatesList selected
+    GetPropertyTitleOwnersList selected
+    GetTitleMemorialsList selected
+    GetTitleParcelAssociationList selected
+End Sub
+Public Sub GetPropertyTitlesList(selected)
+    ' This table provides live and part cancelled Title information
+    Dim csvString As String: csvString = LINZCSV("table-1567", LINZCSVFilter("title_no", selected, ""))
+    CSVtoSheet "PropertyTitlesList", csvString
+    
+End Sub
+Public Sub GetPropertyTitleEstatesList(selected)
+    ' A title estate is a type of ownership of a piece of land e.g. fee simple estate, leasehold estate.
+    ' Estates are used to link the owners to the title. A title can have more than 1 estate and type.
+    Dim csvString As String: csvString = LINZCSV("table-1566", LINZCSVFilter("title_no", selected, ""))
+    CSVtoSheet "PropertyTitleEstatesList", csvString
+End Sub
+Public Sub GetPropertyTitleOwnersList(selected)
+    ' This table provides registered (or current) ownership information for a Title. An owner (or proprietor) is a person
+    ' or corporation holding a share in a Title estate.
+    Dim csvString As String: csvString = LINZCSV("table-1564", LINZCSVFilter("title_no", selected, ""))
+    CSVtoSheet "PropertyTitleOwnersList", csvString
+End Sub
+Public Sub GetTitleMemorialsList(selected)
+    ' A title memorial is information recorded on a property title relating to a transaction, interest or restriction over a
+    ' piece of land. Memorials can include details of mortgages, discharge of mortgages, transfer of ownership, and
+    ' leases; all of which affect the land in some way.
+    Dim csvString As String: csvString = LINZCSV("table-1695", LINZCSVFilter("title_no", selected, "current=%27true%27"))
+    CSVtoSheet "TitleMemorialsList", csvString
+End Sub
+Public Sub GetTitleParcelAssociationList(selected)
+    ' This table is used to associate live and part cancelled titles to current spatial parcels. There is a many to many relationship between titles and parcels
+    Dim csvString As String: csvString = LINZCSV("table-1569", LINZCSVFilter("title_no", selected, ""))
+    CSVtoSheet "TitleParcelAssociationList", csvString
+End Sub
+Public Sub CSVtoSheet(worksheetName, csvString)
+    ' Convert CSV string to worksheet
+    
+    Dim destSheet As Worksheet
+    Set destSheet = Sheets.Add(After:=Worksheets(Worksheets.Count))
+    destSheet.Name = worksheetName & Worksheets.Count
+    
+    csvLines = Split(csvString, Chr(10))
+    For csvLine = 0 To UBound(csvLines)
+        ' csvFields = Split(csvLines(csvLine), ",")
+        csvFields = CleanSplit(csvLines(csvLine))
+        For csvField = 0 To UBound(csvFields)
+            destSheet.Range("A1").Offset(csvLine, csvField).Value = csvFields(csvField)
+        Next csvField
+    Next csvLine
+    
+End Sub
+Public Function CleanSplit(csvLine)
+    ' Split a CSV line into fields by comma delimiter excluding those commas within quotes
+    Dim csvFieldIndex As Integer
+    Dim cleanedCSVFields() As String: ReDim cleanedCSVFields(0)
+    Dim cleanedCSVFieldsIndex As Integer
+    Dim cleanedField As String
+    Dim concatFieldIndex As Integer
+    
+    csvFields = Split(csvLine, ",")
+    
+    csvFieldIndex = 0
+    cleanedCSVFieldsIndex = 0
+    Do While csvFieldIndex <= UBound(csvFields)
+        cleanedField = csvFields(csvFieldIndex)
+        If InStr(cleanedField, Chr(34)) And (csvFieldIndex < UBound(csvFields)) Then
+            ' double quote detected in csvField and it's not the last field in the list
+            concatFieldIndex = csvFieldIndex
+            Do
+                concatFieldIndex = concatFieldIndex + 1
+                cleanedField = cleanedField & "," & csvFields(concatFieldIndex)
+            Loop Until InStr(csvFields(concatFieldIndex), Chr(34)) Or (concatFieldIndex = UBound(csvFields))
+            csvFieldIndex = concatFieldIndex
+        End If
+        csvFieldIndex = csvFieldIndex + 1
+        
+        If cleanedCSVFieldsIndex > 0 Then
+            ReDim Preserve cleanedCSVFields(cleanedCSVFieldsIndex)
+        End If
+        cleanedCSVFields(cleanedCSVFieldsIndex) = cleanedField
+        cleanedCSVFieldsIndex = cleanedCSVFieldsIndex + 1
+    Loop
+    
+    CleanSplit = cleanedCSVFields
 End Function
-Public Function GetMainParcelID(valuation As String) As String
-    ' Taupo District Council Mapi API - returns the main parcel ID for the given valuation number
-    GetMainParcelID = GetMapiField(valuation, "m_parcel_id")
-End Function
-Public Function GetMapiTitle(valuation As String) As String
-    ' Taupo District Council Mapi API - returns the main parcel ID for the given valuation number
-    GetMapiTitle = GetMapiField(valuation, "certificate_of_title")
-End Function
-Public Function ExtractJSONValue(json As String, key As String) As String
-    Dim start As Integer: start = InStr(json, key)
-    start = InStr(json, "features")
-    start = InStr(start, json, key)
-    start = start + Len(key) + 3
-    Dim finish As Integer: finish = InStr(start, json, Chr(34))
-    Dim length As Integer: length = finish - start
-    If (length >= 1) Then
-        ExtractJSONValue = Mid(json, start, length)
-    Else
-        ExtractJSONValue = ""
+Public Function LINZCSVFilter(fieldName, rng, seedFilter) As String
+    ' Creates a SQL "IN" filter for the given field name by comma seperating the values in cell rng
+    ' fieldName is a field name belonging to a LINZ table
+    ' rng is a selected range of cells
+    ' seedFilter is a further restriction to apply to the generated filter
+    
+    Dim filter As String: filter = seedFilter
+    If filter <> "" Then
+        filter = filter + "%20AND%20"
     End If
-End Function
-Public Function ValidLiveTitle(title As String) As String
-    ' Returns true / false that title is current and valid
-    Dim ttle As String
-    ttle = LINZ("table-1567", "title_no=%27" + title + "%27%20AND%20status=%27Live%27", "title_no")
-    ValidLiveTitle = (title = ttle)
-End Function
-Public Function GetTitles(parcelID As String) As String
-    ' Returns a list of (current) LINZ titles for the given ParcelID
-    GetTitles = LINZ("layer-772", "id=" + parcelID, "titles")
-End Function
-Public Function GetMortgages(title As String) As String
-    ' Returns a list of (current) LINZ encumbrancees for the given title
-    GetMortgages = LINZ("table-1695", "title_no=%27" + FirstInList(title) + "%27%20AND%20current=%27true%27%20AND%20instrument_type=%27Mortgage%27", "encumbrancees")
-End Function
-Public Function GetInstrumentNumbers(title As String) As String
-    ' Returns a list of (current) LINZ Instrument numbers for the given title
-    GetInstrumentNumbers = LINZ("table-1695", "title_no=%27" + FirstInList(title) + "%27%20AND%20current=%27true%27", "instrument_number")
-End Function
-Public Function GetInstrumentTypes(title As String) As String
-    ' Returns a list of (current) LINZ instrument types for the given title – should be same order as instrument numbers
-    GetInstrumentTypes = LINZ("table-1695", "title_no=%27" + FirstInList(title) + "%27%20AND%20current=%27true%27", "instrument_type")
-End Function
-Public Function GetSurnames(title As String) As String
-    ' Returns a list of LINZ surnames for the given title
-    GetSurnames = LINZ("table-1564", "title_no=%27" + FirstInList(title) + "%27", "prime_surname")
-End Function
-
-Public Function FirstInList(aList As String) As String
-    Dim comma As Integer: comma = InStr(aList, ",")
-    If comma = 0 Then
-        FirstInList = aList
-    Else
-        FirstInList = Trim(Left(aList, comma - 1))
-    End If
-End Function
-Public Sub ProcessValuations()
-    ' Process all selected valuations - TDC specific but can be modified
+    filter = filter + fieldName + "%20IN%20("
     
-    Dim sourceSheet As Worksheet
-    Dim destinationSheet As Worksheet
-    Dim rng As Range
-    Dim linzTitle As String
-    Dim currow As Integer
-    
-    Set rng = Selection
-    Set sourceSheet = ActiveSheet
-    Set destSheet = Sheets.Add
-    
-    ' format columns as text and populate headings
-    destSheet.Columns("A:G").NumberFormat = "@"
-    
-    destSheet.Range("A1").Value = "Valuation No."
-    destSheet.Range("B1").Value = "NCS Title"
-    destSheet.Range("C1").Value = "LINZ Title"
-    destSheet.Range("D1").Value = "LINZ Surnames"
-    destSheet.Range("E1").Value = "Mortgages"
-    destSheet.Range("F1").Value = "Instrument Numbers"
-    destSheet.Range("G1").Value = "Instrument Types"
-    
-    ' get data from Mapi and LINZ
+    Dim counter As Integer: counter = 0
     For Each cell In rng
         If IsEmpty(cell.Value) Then
             Exit For
         End If
-        
-        currow = currow + 1
-        
-        linzTitle = Trim(UCase(GetMapiTitle(cell.Value)))
-        
-        destSheet.Range("A1").Offset(currow, 0).Value = cell.Value
-        destSheet.Range("B1").Offset(currow, 0).Value = linzTitle
-
-        If ValidLiveTitle(linzTitle) Then
-            destSheet.Range("C1").Offset(currow, 0).Value = linzTitle
-            destSheet.Range("D1").Offset(currow, 0).Value = GetSurnames(linzTitle)
-            destSheet.Range("E1").Offset(currow, 0).Value = GetMortgages(linzTitle)
-            destSheet.Range("F1").Offset(currow, 0).Value = GetInstrumentNumbers(linzTitle)
-            destSheet.Range("G1").Offset(currow, 0).Value = GetInstrumentTypes(linzTitle)
+        If counter > 0 Then
+            filter = filter + ","
         End If
+        filter = filter + "%27" + URLEncode(cell.Value) + "%27"
+        counter = counter + 1
     Next cell
-End Sub
-Public Function LINZ(typeName As String, filter As String, element As String) As String
-    ' using the following as reference
-    ' http://libkod.info/officexml-CHP-9-SECT-5.shtml#officexml-CHP-9-EX-4
-    ' http://www.wikihow.com/Create-a-User-Defined-Function-in-Microsoft-Excel
-    ' http://stackoverflow.com/questions/11245733/declaring-early-bound-msxml-object-throws-an-error-in-vba
-    ' http://stackoverflow.com/questions/19117667/how-to-read-xml-attributes-using-vba-to-excel
-    ' http://stackoverflow.com/questions/5297068/read-xml-attribute-vba
+    LINZCSVFilter = filter + ")"
+End Function
+Public Function LINZCSV(typeName As String, filter As String) As String
+    ' Return results as CSV string
     
-    Dim query As String: query = "https://data.linz.govt.nz/services;key=" + key + "/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=" + typeName + "&cql_filter=" + filter
+    Dim query As String: query = "https://data.linz.govt.nz/services;key=" + key + "/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=" + typeName + "&cql_filter=" + filter + "&outputFormat=CSV"
+    
     Dim http As Object: Set http = CreateObject("MSXML2.XMLHTTP")
-    Dim xmlDoc As Object: Set xmlDoc = CreateObject("MSXML2.DOMDocument")
-    Dim elements As Object
-    Dim el As Variant
-    Dim results As String: results = ""
     
-    'create HTTP request to query URL - make sure to have
-    'that last "False" there for synchronous operation
     http.Open "GET", query, False
-    
-    'send HTTP request
     http.send
-
-    'parse result
-    xmlDoc.LoadXML http.responseText
-    
-    'gather and return element text(s)
-    Set elements = xmlDoc.getElementsByTagName("data.linz.govt.nz:" + element)
-    For Each el In elements
-        results = results + IIf(results = "", "", ",")
-        results = results + el.Text
-    Next
-    
-    LINZ = results
+    LINZCSV = http.responseText
 
 End Function
+Public Function URLEncode( _
+   StringVal As String, _
+   Optional SpaceAsPlus As Boolean = False _
+) As String
+  ' This function from http://stackoverflow.com/a/218199
+
+  Dim StringLen As Long: StringLen = Len(StringVal)
+
+  If StringLen > 0 Then
+    ReDim result(StringLen) As String
+    Dim i As Long, CharCode As Integer
+    Dim Char As String, Space As String
+
+    If SpaceAsPlus Then Space = "+" Else Space = "%20"
+
+    For i = 1 To StringLen
+      Char = Mid$(StringVal, i, 1)
+      CharCode = Asc(Char)
+      Select Case CharCode
+        Case 97 To 122, 65 To 90, 48 To 57, 45, 46, 95, 126
+          result(i) = Char
+        Case 32
+          result(i) = Space
+        Case 0 To 15
+          result(i) = "%0" & Hex(CharCode)
+        Case Else
+          result(i) = "%" & Hex(CharCode)
+      End Select
+    Next i
+    URLEncode = Join(result, "")
+  End If
+End Function
+
