@@ -1,8 +1,8 @@
 Setup 
 =====
 1. Register with LINZ https://data.linz.govt.nz/
-2. Obtain an API key http://www.linz.govt.nz/about-linz/linz-data-service/features/how-to-use-web-services
-3. Apply for restricted datasets https://data.linz.govt.nz/login/?next=/group/restricted-owner-data-group/request-access/
+2. Obtain an API key http://www.linz.govt.nz/data/linz-data-service/guides-and-documentation/creating-an-api-key
+3. Apply for restricted owner information datasets (this step may no longer be required)
 4. Download LINZExcel.bas from https://raw.githubusercontent.com/localgovernment/LINZExcel/master/LINZExcel.bas
 5. Create a new Excel spreadsheet 
 6. Press ALT+F11
