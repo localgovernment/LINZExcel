@@ -11,6 +11,7 @@ Setup
 9. Near the top of the code, find 'Public Const key as String = "my LINZ API key"' and replace key string with your LINZ api key
 10. Close VBA for applications 
 11. Creat a button in a worksheet and assign it to the GetTitleInformation macro.  See [here](https://support.office.com/en-us/article/Add-a-button-and-assign-a-macro-to-it-in-a-worksheet-d58edd7d-cb04-4964-bead-9c72c843a283?CorrelationId=d44b2204-cdf2-4e1a-98e0-9dfed6cb47f7&ui=en-US&rs=en-US&ad=US&ocmsassetID=HP010236676#bmadd_or_edit_a_button__forms_toolbar_).
+12. Save as an 'Excel Macro-Enabled Workbook' (.xlsm)
 
 Using LINZExcel
 ===============
